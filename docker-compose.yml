@@ -21,6 +21,16 @@ services:
       - "8890:8890"
     volumes:
       - ./data/db:/data
+  siteScrapingService:
+    image: mikidi/site-scraping-service:latest
+    links:
+      - db:database
+    ports:
+      - "8888:80"
+    environment:
+      MODE: development
+    volumes:
+      - ../site-scraping-service:/app
   resource:
     image: semtech/mu-cl-resources:1.12.1
     links:
