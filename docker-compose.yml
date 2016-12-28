@@ -10,6 +10,9 @@ services:
     image: semtech/mu-dispatcher:1.0.1
     links:
       - resource:resource
+      - scraper:scraper
+      - malletservice:malletservice
+      - themeservice:themeservice
     volumes:
       - ./config/dispatcher:/config
   db:
@@ -21,19 +24,31 @@ services:
       - "8890:8890"
     volumes:
       - ./data/db:/data
-  siteScrapingService:
-    image: mikidi/site-scraping-service:latest
-    links:
-      - db:database
-    ports:
-      - "8888:80"
-    environment:
-      MODE: development
-    volumes:
-      - ../site-scraping-service:/app
   resource:
     image: semtech/mu-cl-resources:1.12.1
     links:
       - db:database
     volumes:
       - ./config/resources:/config
+  scraper:
+    image: mikidi/site-scraping-service
+    links:
+      - db:database
+    environment:
+      URL_QUERY: |
+          SELECT DISTINCT ?url WHERE {
+            GRAPH <http://mu.semte.ch/application> {
+              ?event <http://w3id.org/ost/ns#infoUrl> ?url;
+                     a <http://w3id.org/ost/ns#Event>.
+            }
+          }
+  malletservice:
+    image: mikidi/mallet-topic-tagging-service
+    links:
+      - db:database
+    volumes:
+      - /home/michael/Documents/thesis/nl-mallet:/data
+  themeservice:
+    image: mikidi/mallet-supervised-theming-service
+    links:
+      - db:database
